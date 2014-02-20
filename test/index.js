@@ -64,7 +64,7 @@ describe('express-reverse', function() {
       app.get('test 4', '/test-limited/:x(a|b)?', noop);
 
       var url = app.locals.url;
-      assert.equal(url('test 4', { x: 'a' }, { x: 'y' }, '#bang'), '/test-limited/a#bang?x=y');
+      assert.equal(url('test 4', { x: 'a' }, { x: 'y' }, '#bang'), '/test-limited/a?x=y#bang');
     });
   });
 

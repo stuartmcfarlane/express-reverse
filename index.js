@@ -34,8 +34,8 @@ function addHelper(app, options) {
     var route = app._namedRoutes[name];
     if (!route) throw new Error('Route not found: ' + name);
     return reverse(app._namedRoutes[name].path, params) +
-      (hash || '') +
-      makeQuery(query);
+      makeQuery(query) +
+      (hash || '');
   };
 }
 
@@ -48,8 +48,8 @@ function addMiddleware(app, options) {
         routeName = status;
       }
       var url = reverse(app._namedRoutes[routeName].path, params) +
-        (hash || '') +
-        makeQuery(query);
+        makeQuery(query) +
+        (hash || '');
       if (isNaN(status)) return res.redirect(url);
       else return res.redirect(status, url);
     };
