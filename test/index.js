@@ -59,6 +59,13 @@ describe('express-reverse', function() {
       var url = app.locals.url;
       assert.equal(url('test 4', { x: 'a' }, { x: 'y' }), '/test-limited/a?x=y');
     });
+
+    it('should generate reverse route URLs with hash', function() {
+      app.get('test 4', '/test-limited/:x(a|b)?', noop);
+
+      var url = app.locals.url;
+      assert.equal(url('test 4', { x: 'a' }, { x: 'y' }, '#bang'), '/test-limited/a#bang?x=y');
+    });
   });
 
   it('should add res.redirectToRoute middleware', function() {

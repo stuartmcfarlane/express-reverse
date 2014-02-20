@@ -30,22 +30,26 @@ function augmentVerbs(app) {
 }
 
 function addHelper(app, options) {
-  app.locals[options.helperName] = function(name, params, query) {
+  app.locals[options.helperName] = function(name, params, query, hash) {
     var route = app._namedRoutes[name];
     if (!route) throw new Error('Route not found: ' + name);
-    return appendQuery(reverse(app._namedRoutes[name].path, params), query);
+    return reverse(app._namedRoutes[name].path, params) +
+      (hash || '') +
+      makeQuery(query);
   };
 }
 
 function addMiddleware(app, options) {
   app.use(function(req, res, next) {
-    res.redirectToRoute = function(status, routeName, params, query) {
+    res.redirectToRoute = function(status, routeName, params, query, hash) {
       if (isNaN(status)) {
         query = params;
         params = routeName;
         routeName = status;
       }
-      var url = appendQuery(reverse(app._namedRoutes[routeName].path, params), query);
+      var url = reverse(app._namedRoutes[routeName].path, params) +
+        (hash || '') +
+        makeQuery(query);
       if (isNaN(status)) return res.redirect(url);
       else return res.redirect(status, url);
     };
@@ -64,15 +68,16 @@ function reverse(path, params) {
   });
 }
 
-function appendQuery(url, query) {
-  if (!query) return url;
+function makeQuery(query) {
+  if (!query) return '';
   if (typeof query === 'string') {
-    return url + '?' + query.replace(/^[^\?]?(.*)$/, '$1');
+    return '?' + query.replace(/^[^\?]?(.*)$/, '$1');
   }
   var vars = [];
   var key;
   for (key in query) {
     vars.push(key + '=' + query[key]);
   }
-  return url + '?' + vars.join('&');
+  return '?' + vars.join('&');
 }
+
