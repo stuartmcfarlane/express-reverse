@@ -4,7 +4,6 @@ module.exports = function(app, options) {
   if (!options) options = {};
   if (!options.helperName) options.helperName = 'url';
   augmentVerbs(app);
-  addHelper(app, options);
   addMiddleware(app, options);
 };
 
@@ -29,23 +28,49 @@ function augmentVerbs(app) {
   });
 }
 
-function addHelper(app, options) {
-  app.locals[options.helperName] = function(name, params, query, hash) {
-    var route = app._namedRoutes[name];
-    if (!route) throw new Error('Route not found: ' + name);
-    return reverse(app._namedRoutes[name].path, params) +
-      makeQuery(query) +
-      (hash || '');
-  };
+function reverseHelper(res, name, params, query, hash) {
+  if (typeof name !== 'string') {
+    hash = query;
+    query = params;
+    params = name;
+    name = res.locals._matchedRouteName;
+  }
+  var route = res.app._namedRoutes[name];
+  if (!route) throw new Error('Route not found: ' + name);
+  return reverse(res.app._namedRoutes[name].path, params) +
+    makeQuery(query) +
+    (hash || '');
+}
+
+function nameOfMatchedRoute(req) {
+  var name;
+  for (name in req.app._namedRoutes) {
+    if (req.app._namedRoutes[name].regexp.test(req._parsedUrl.pathname)) {
+      return name;
+    }
+  }
 }
 
 function addMiddleware(app, options) {
-  app.use(function(req, res, next) {
-    res.redirectToRoute = function(status, routeName, params, query, hash) {
+  app.use(function expressReverse(req, res, next) {
+    res.locals._matchedRouteName = nameOfMatchedRoute(req);
+    var _render = res.render;
+    res.render = function wrappedRender(template, locals, cb) {
+      locals[options.helperName] = reverseHelper.bind(null, res);
+      _render.call(res, template, locals, cb);
+    };
+    res.redirectToRoute = function redirectToRoute(status, routeName, params, query, hash) {
       if (isNaN(status)) {
+        hash = query;
         query = params;
         params = routeName;
         routeName = status;
+      }
+      if (typeof routeName !== 'string') {
+        hash = query;
+        query = params;
+        params = routeName;
+        routeName = res.locals._matchedRouteName;
       }
       var url = reverse(app._namedRoutes[routeName].path, params) +
         makeQuery(query) +
