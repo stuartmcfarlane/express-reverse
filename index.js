@@ -106,6 +106,6 @@ function makeQuery(query) {
   for (key in query) {
     vars.push(key + '=' + query[key]);
   }
+  if (!vars.length) return '';
   return '?' + vars.join('&');
 }
-
