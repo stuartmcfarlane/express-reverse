@@ -72,6 +72,9 @@ function addMiddleware(app, options) {
         params = routeName;
         routeName = res.locals._matchedRouteName;
       }
+      if (!app._namedRoutes[routeName]) {
+        throw 'No named route found';
+      }
       var url = reverse(app._namedRoutes[routeName].path, params) +
         makeQuery(query) +
         (hash || '');

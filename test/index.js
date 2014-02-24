@@ -31,7 +31,7 @@ describe('express-reverse', function() {
     app.get('test', '/test', noop);
     middleware(req, res, function() {});
     assert.isDefined(app._namedRoutes);
-    // assert.isDefined(app.locals.url);
+    assert.isDefined(res.locals.url);
   });
 
   it('should add res.redirectToRoute middleware', function() {
@@ -51,7 +51,7 @@ describe('express-reverse', function() {
   });
 
   describe('reverse routing', function() {
-    it.only('should generate reverse route URLs', function() {
+    it('should generate reverse route URLs', function() {
       console.log()
       app.get('test 1', '/test', noop);
       app.get('test 2', '/test/:x', noop);
