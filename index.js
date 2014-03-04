@@ -87,12 +87,12 @@ function addMiddleware(app, options) {
 
 function reverse(path, params) {
   if (!params) params = {};
-  return path.replace(/(\/:\w+(?:\([^\)]*\))?\??)/g, function (m, p1) {
+  return path.replace(/([\/-])(:\w+(?:\([^\)]*\))?\??)/g, function (m, delim, p1) {
     var required = !~p1.indexOf('?');
-    var param = p1.replace(/([/:?]|(?:\([^\)]*\))?)/g, '');
+    var param = p1.replace(/([-/:?]|(?:\([^\)]*\))?)/g, '');
     if (required && !params.hasOwnProperty(param))
       throw new Error('Missing value for "' + param + '".');
-    return params[param] ? '/' + params[param] : '';
+    return params[param] ? delim + params[param] : '';
   });
 }
 
