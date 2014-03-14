@@ -99,7 +99,7 @@ function reverse(path, params) {
 function makeQuery(query) {
   if (!query) return '';
   if (typeof query === 'string') {
-    return '?' + query.replace(/^[^\?]?(.*)$/, '$1');
+    return '?' + query.replace(/^[\?]?(.*)$/, '$1');
   }
   var vars = [];
   var key;
