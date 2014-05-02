@@ -1,4 +1,5 @@
 var methods = require('methods');
+var debug = require('debug')('express:reverse');
 
 module.exports = function(app, options) {
   if (!options) options = {};
@@ -35,6 +36,7 @@ function reverseHelper(res, name, params, query, hash) {
     params = name;
     name = res.locals._matchedRouteName;
   }
+  debug('reverseHelper', {name: name, params: params, query: query, hash: hash });
   var route = res.app._namedRoutes[name];
   if (!route) throw new Error('Route not found: ' + name);
   return reverse(res.app._namedRoutes[name].path, params) +
@@ -54,6 +56,7 @@ function nameOfMatchedRoute(req) {
 function addMiddleware(app, options) {
   app.use(function expressReverse(req, res, next) {
     res.locals._matchedRouteName = nameOfMatchedRoute(req);
+    debug('route name', res.locals._matchedRouteName);
     var _render = res.render;
     res.render = function wrappedRender(template, locals, cb) {
       locals[options.helperName] = reverseHelper.bind(null, res);
@@ -72,6 +75,7 @@ function addMiddleware(app, options) {
         params = routeName;
         routeName = res.locals._matchedRouteName;
       }
+      debug('redirectToUrl', {status: status, routeName: routeName, params: params, query: query, hash: hash });
       if (!app._namedRoutes[routeName]) {
         throw 'No named route found';
       }
@@ -87,13 +91,17 @@ function addMiddleware(app, options) {
 
 function reverse(path, params) {
   if (!params) params = {};
-  return path.replace(/([\/-])(:\w+(?:\([^\)]*\))?\??)/g, function (m, delim, p1) {
+  var resolved = path.replace(/([\/-])(:\w+(?:\([^\)]*\))?\??)/g, resolveParam);
+  debug('url', resolved);
+  return resolved;
+
+  function resolveParam(m, delim, p1) {
     var required = !~p1.indexOf('?');
     var param = p1.replace(/([-/:?]|(?:\([^\)]*\))?)/g, '');
     if (required && !params.hasOwnProperty(param))
       throw new Error('Missing value for "' + param + '".');
     return params[param] ? delim + params[param] : '';
-  });
+  }
 }
 
 function makeQuery(query) {
